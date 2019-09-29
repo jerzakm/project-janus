@@ -1,4 +1,4 @@
-import { Renderer, Ticker, Container, UPDATE_PRIORITY, settings } from 'pixi.js'
+import { Renderer, Ticker, Container, UPDATE_PRIORITY, settings, SCALE_MODES } from 'pixi.js'
 
 export let renderer: Renderer
 export let ticker = Ticker.shared
@@ -30,5 +30,5 @@ export function initRenderer() {
 
   document.body.appendChild(renderer.view)
 
-  settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST
+  settings.SCALE_MODE = SCALE_MODES.NEAREST
 }
