@@ -1,1 +1,1 @@
-export const MAP_CELL_SIZE = 4
+export const MAP_CELL_SIZE = 8
