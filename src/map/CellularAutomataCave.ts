@@ -1,6 +1,9 @@
-interface ICellularAutomataCaveOptions {
+export interface ICellularAutomataCaveOptions {
   width: number
   height: number
+  spawnRate: number
+  survivalTreshold: number
+  birthTreshhold: number
 }
 
 export class CellularAutomataCave {
@@ -9,28 +12,37 @@ export class CellularAutomataCave {
   private currentGrid: boolean[][] = []
   private newGrid: boolean[][] = []
 
-  gridSize: number = 128
+
+  width: number = 96
+  height: number = 48
   spawnRate: number = 0.4
   survivalTreshold: number = 4
   birthTreshhold: number = 4
 
-  stepsPerFrame: number = this.gridSize ** 2
-  maxIterations: number = 6
+  stepsPerFrame: number = this.width * this.height
+  maxIterations: number = 16
 
   private stepX: number = 0
   private stepY: number = 0
-  private iterationsCount: number = 0
+  iterationsCount: number = 0
 
-  constructor() {
-    this.initializeArrays()
+  constructor(options?: ICellularAutomataCaveOptions) {
+    if (options) {
+      const { width, height, spawnRate, survivalTreshold, birthTreshhold } = options
+      this.width = width
+      this.height = height
+      this.spawnRate = spawnRate
+      this.survivalTreshold = survivalTreshold
+      this.birthTreshhold = birthTreshhold
+    }
   }
 
   private initializeArrays = () => {
-    for (let x = 0; x < this.gridSize; x++) {
+    for (let x = 0; x < this.width; x++) {
       this.initialGrid[x] = []
       this.currentGrid[x] = []
       this.newGrid[x] = []
-      for (let y = 0; y < this.gridSize; y++) {
+      for (let y = 0; y < this.height; y++) {
         this.currentGrid[x][y] = Math.random() >= this.spawnRate ? true : false
         this.newGrid[x][y] = this.currentGrid[x][y]
         this.initialGrid[x][y] = this.currentGrid[x][y]
@@ -39,7 +51,7 @@ export class CellularAutomataCave {
   }
 
   private isOffGrid = (x: number, y: number) => {
-    return x > this.gridSize - 1 || x < 0 || y > this.gridSize - 1 || y < 0 ? true : false
+    return x > this.width - 1 || x < 0 || y > this.height - 1 || y < 0 ? true : false
   }
 
   private neighbourValues = (x: number, y: number, radius?: number) => {
@@ -70,10 +82,10 @@ export class CellularAutomataCave {
   }
 
   private makeStep = () => {
-    if (this.stepY < this.gridSize) {
+    if (this.stepY < this.height) {
       this.calculateNewCellValue(this.stepX, this.stepY)
       this.stepX++
-      if (this.stepX == this.gridSize) {
+      if (this.stepX == this.width) {
         this.stepX = 0
         this.stepY++
       }
@@ -86,8 +98,8 @@ export class CellularAutomataCave {
   }
 
   private reassignGrids = () => {
-    for (let x = 0; x < this.gridSize; x++) {
-      for (let y = 0; y < this.gridSize; y++) {
+    for (let x = 0; x < this.width; x++) {
+      for (let y = 0; y < this.height; y++) {
         this.currentGrid[x][y] = this.newGrid[x][y]
       }
     }
@@ -95,17 +107,33 @@ export class CellularAutomataCave {
 
   public generateFullGrid = () => {
     this.initializeArrays()
-    let stepCount = 0
-    while (stepCount < this.stepsPerFrame && this.iterationsCount < this.maxIterations) {
+    while (this.iterationsCount < this.maxIterations) {
       this.makeStep()
-      stepCount++
     }
     return this.newGrid
   }
 
   public generateStep = () => {
     let finished = this.iterationsCount < this.maxIterations ? false : true
+    let stepCount = 0
+    while (stepCount < this.width * this.height) {
+      this.makeStep()
+      stepCount++
+    }
 
     return { finished, grid: this.newGrid }
+  }
+
+  public cleanStrays = (neighbours: number) {
+    for (let x = 0; x < this.width; x++) {
+      for (let y = 0; y < this.height; y++) {
+        const values = this.neighbourValues(x, y)
+        let count = 0
+        values.map(v => v ? count++ : null)
+        if (count < neighbours) {
+          this.newGrid[x][y] = false
+        }
+      }
+    }
   }
 }

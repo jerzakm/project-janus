@@ -29,6 +29,5 @@ export function initRenderer() {
   ticker.start()
 
   document.body.appendChild(renderer.view)
-
   settings.SCALE_MODE = SCALE_MODES.NEAREST
 }
